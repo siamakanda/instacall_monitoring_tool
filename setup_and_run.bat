@@ -18,6 +18,7 @@ if not exist .env.example (
     (
         echo PORTAL_USERNAME="your_username_here"
         echo PORTAL_PASSWORD="your_password_here"
+        echo CUSTOMER_IDS="18,22,35"
     ) > .env.example
 )
 
