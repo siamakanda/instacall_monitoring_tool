@@ -75,6 +75,12 @@ class Settings:
     def from_dict(cls, data: dict[str, Any]) -> Settings:
         field_names = {f.name for f in fields(cls)}
         filtered = {k: v for k, v in data.items() if k in field_names}
+
+        if "balance_rearm_threshold" not in filtered and "balance_threshold" in filtered:
+            filtered["balance_rearm_threshold"] = filtered["balance_threshold"]
+        if "margin_rearm_threshold" not in filtered and "margin_threshold" in filtered:
+            filtered["margin_rearm_threshold"] = filtered["margin_threshold"]
+
         return cls(**filtered)
 
 

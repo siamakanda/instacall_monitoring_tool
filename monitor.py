@@ -240,6 +240,7 @@ def _monitor_loop(settings: Settings, stop_event: Optional[threading.Event] = No
     except KeyboardInterrupt:
         print("\n\n[-] Interrupted. Shutting down...")
         logging.info("Monitor stopped by user (Ctrl+C).")
+    finally:
         write_status(alive=False)
 
 

@@ -35,9 +35,16 @@ def _read_status() -> dict[str, Any]:
         return {"alive": False, "error": "status file not found"}
 
 
+def _monitor_is_running() -> bool:
+    if _monitor_running:
+        return True
+    status = _read_status()
+    return bool(status.get("alive"))
+
+
 def _get_running_status() -> dict[str, Any]:
     status = _read_status()
-    status["web_running"] = _monitor_running
+    status["web_running"] = _monitor_is_running()
     return status
 
 
@@ -57,7 +64,7 @@ def admin_status():
 def admin_start():
     global _monitor_thread, _stop_event, _monitor_running
 
-    if _monitor_running:
+    if _monitor_is_running():
         return redirect(url_for("dashboard"))
 
     from monitor import run_monitor
