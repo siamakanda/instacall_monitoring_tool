@@ -48,7 +48,11 @@ def show_status(settings: Settings) -> None:
         print(f"  Interval: {interval // 60}m {interval % 60}s  |  Balance alert below {bal:+.1f}")
     else:
         print(f"  Interval: {interval}s  |  Balance alert below {bal:+.1f}")
+    if settings.balance_rearm_threshold != settings.balance_threshold:
+        print(f"  Balance escalation at {settings.balance_rearm_threshold:+.1f}")
     print(f"  Margin alert below {fmt_pct(margin)}  |  Billed min above {billed:.0f}")
+    if settings.margin_rearm_threshold != settings.margin_threshold:
+        print(f"  Margin escalation at {fmt_pct(settings.margin_rearm_threshold)}")
     print(f"  Summary: {direction} / {sint}")
     print(f"  Cooldown: {settings.alert_cooldown_seconds}s")
     audio = settings.audio_enabled
@@ -60,7 +64,9 @@ def menu_settings(settings: Settings) -> Settings:
         ("customer_ids", "Customer IDs (comma-separated)", lambda v: [x.strip() for x in v.split(",") if x.strip()]),
         ("check_interval_seconds", "Check interval (seconds)", int),
         ("balance_threshold", "Balance alert threshold", float),
+        ("balance_rearm_threshold", "Balance rearm threshold (escalation, default=same)", float),
         ("margin_threshold", "Margin alert threshold (%)", float),
+        ("margin_rearm_threshold", "Margin rearm threshold % (escalation, default=same)", float),
         ("billed_min_threshold", "Billed min threshold", float),
         ("db_retention_days", "DB retention (days, 0=keep all)", int),
         ("active_hours_start", "Active hours start (HH:MM, empty=24/7)", str),

@@ -38,7 +38,9 @@ class Settings:
     customer_ids: list[str] = field(default_factory=lambda: ["18"])
     check_interval_seconds: int = 600
     balance_threshold: float = -365.0
+    balance_rearm_threshold: float = -365.0
     margin_threshold: float = 30.0
+    margin_rearm_threshold: float = 30.0
     billed_min_threshold: float = 70.0
     db_retention_days: int = 30
     request_timeout: int = 10
@@ -124,6 +126,11 @@ def validate_settings(settings: Settings) -> list[str]:
 
     if settings.alert_cooldown_seconds < 0:
         errors.append("alert_cooldown_seconds must be >= 0")
+
+    if settings.balance_rearm_threshold > settings.balance_threshold:
+        errors.append("balance_rearm_threshold must be <= balance_threshold (more severe than primary)")
+    if settings.margin_rearm_threshold > settings.margin_threshold:
+        errors.append("margin_rearm_threshold must be <= margin_threshold (more severe than primary)")
 
     if settings.db_retention_days < 0:
         errors.append("db_retention_days must be >= 0")

@@ -106,19 +106,24 @@ def trigger_balance_alert(
     customer_name: str,
     settings: Settings,
     manager: SirenManager = _siren_manager,
+    escalated: bool = False,
 ) -> None:
+    title = "BALANCE ESCALATION" if escalated else "BALANCE CRITICAL ALERT"
+    severity = "escalated" if escalated else "dropped"
     notification.notify(
-        title="BALANCE CRITICAL ALERT",
-        message=f"{customer_name} (ID: {customer_id}) balance dropped to {current_balance:.4f}!",
+        title=title,
+        message=f"{customer_name} (ID: {customer_id}) balance {severity} to {current_balance:.4f}!",
         app_name="InstacallMonitor",
         timeout=10,
     )
+    rearm_thresh = settings.balance_rearm_threshold
+    thresh_info = f" (escalation < {rearm_thresh:+.1f})" if escalated else ""
     logging.warning(
         f"ALERT TRIGGERED for {customer_name} (ID: {customer_id}): "
-        f"Balance {current_balance:.4f} < {settings.balance_threshold}"
+        f"Balance {current_balance:.4f} < {settings.balance_threshold}{thresh_info}"
     )
-    send_webhook(settings, "BALANCE CRITICAL ALERT",
-                 f"{customer_name} (ID: {customer_id}) balance dropped to {current_balance:.4f}")
+    send_webhook(settings, title,
+                 f"{customer_name} (ID: {customer_id}) balance {severity} to {current_balance:.4f}")
 
     if settings.audio_enabled:
         play_siren(
@@ -126,7 +131,7 @@ def trigger_balance_alert(
             lambda: manager.play_rising_falling(settings),
             customer_name,
             customer_id,
-            "BALANCE",
+            "BALANCE" if not escalated else "BALANCE ESCALATION",
         )
 
 
@@ -137,19 +142,24 @@ def trigger_margin_alert(
     customer_name: str,
     settings: Settings,
     manager: SirenManager = _siren_manager,
+    escalated: bool = False,
 ) -> None:
+    title = "MARGIN ESCALATION" if escalated else "MARGIN CRITICAL ALERT"
+    severity = "escalated" if escalated else "dropped"
     notification.notify(
-        title="MARGIN CRITICAL ALERT",
-        message=f"{customer_name} (ID: {customer_id}) Margin dropped to {margin:.1f}%! (Billed: {billed_min:.1f} min)",
+        title=title,
+        message=f"{customer_name} (ID: {customer_id}) Margin {severity} to {margin:.1f}%! (Billed: {billed_min:.1f} min)",
         app_name="InstacallMonitor",
         timeout=10,
     )
+    rearm_thresh = settings.margin_rearm_threshold
+    thresh_info = f" (escalation < {rearm_thresh}%)" if escalated else ""
     logging.warning(
         f"MARGIN ALERT for {customer_name} (ID: {customer_id}): "
         f"Margin {margin:.1f}% < {settings.margin_threshold}%, "
-        f"Billed {billed_min:.1f} > {settings.billed_min_threshold}"
+        f"Billed {billed_min:.1f} > {settings.billed_min_threshold}{thresh_info}"
     )
-    send_webhook(settings, "MARGIN CRITICAL ALERT",
+    send_webhook(settings, title,
                  f"{customer_name} (ID: {customer_id}) Margin: {margin:.1f}% (Billed: {billed_min:.1f} min)")
 
     if settings.audio_enabled:
@@ -158,5 +168,5 @@ def trigger_margin_alert(
             lambda: manager.play_alternating(settings),
             customer_name,
             customer_id,
-            "MARGIN",
+            "MARGIN" if not escalated else "MARGIN ESCALATION",
         )

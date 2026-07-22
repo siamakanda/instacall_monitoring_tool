@@ -16,6 +16,9 @@ class TestSettings:
         assert s.customer_ids == ["18"]
         assert s.check_interval_seconds == 600
         assert s.balance_threshold == -365.0
+        assert s.balance_rearm_threshold == -365.0
+        assert s.margin_threshold == 30.0
+        assert s.margin_rearm_threshold == 30.0
         assert s.alert_cooldown_seconds == 300
         assert s.webhook_type == "none"
 
@@ -56,3 +59,22 @@ class TestSettings:
     def test_validate_negative_cooldown(self) -> None:
         errors = validate_settings(Settings(alert_cooldown_seconds=-1))
         assert any("alert_cooldown_seconds" in e for e in errors)
+
+    def test_validate_rearm_threshold_more_severe(self) -> None:
+        s = Settings(balance_threshold=-500.0, balance_rearm_threshold=-600.0)
+        assert validate_settings(s) == []
+
+    def test_validate_balance_rearm_not_worse(self) -> None:
+        s = Settings(balance_threshold=-500.0, balance_rearm_threshold=-400.0)
+        errors = validate_settings(s)
+        assert any("balance_rearm_threshold" in e for e in errors)
+
+    def test_validate_margin_rearm_not_worse(self) -> None:
+        s = Settings(margin_threshold=30.0, margin_rearm_threshold=40.0)
+        errors = validate_settings(s)
+        assert any("margin_rearm_threshold" in e for e in errors)
+
+    def test_validate_rearm_equal_is_valid(self) -> None:
+        s = Settings(balance_threshold=-500.0, balance_rearm_threshold=-500.0,
+                      margin_threshold=30.0, margin_rearm_threshold=30.0)
+        assert validate_settings(s) == []

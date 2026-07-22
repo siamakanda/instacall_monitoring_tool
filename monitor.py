@@ -57,14 +57,19 @@ def _is_within_active_hours(
 def _monitor_loop(settings: Settings) -> None:
     customer_ids = settings.customer_ids
     balance_threshold = settings.balance_threshold
+    balance_rearm = settings.balance_rearm_threshold
     margin_threshold = settings.margin_threshold
+    margin_rearm = settings.margin_rearm_threshold
     billed_min_threshold = settings.billed_min_threshold
     interval = settings.check_interval_seconds
     timeout = settings.request_timeout
     cooldown = settings.alert_cooldown_seconds
 
-    alert_status: dict[str, bool] = {cid: False for cid in customer_ids}
-    margin_alert_status: dict[str, bool] = {cid: False for cid in customer_ids}
+    balance_escalation = balance_rearm < balance_threshold
+    margin_escalation = margin_rearm < margin_threshold
+
+    balance_state: dict[str, int] = {cid: 0 for cid in customer_ids}
+    margin_state: dict[str, int] = {}
     last_balance_vals: dict[str, tuple[float, Optional[float]]] = {}
     last_margin_vals: dict[str, tuple[Optional[float], Optional[float]]] = {}
     error_count = 0
@@ -124,16 +129,21 @@ def _monitor_loop(settings: Settings) -> None:
                     else:
                         logging.info(f"Customer {cid} ({customer_name}) - Balance: {balance:.4f}")
 
+                    state = balance_state.get(cid, 0)
                     if balance < balance_threshold:
-                        if not alert_status[cid] and _siren_manager.can_alert(cid, cooldown):
+                        if state == 0 and _siren_manager.can_alert(cid, cooldown):
                             trigger_balance_alert(cid, balance, customer_name or "N/A", settings)
-                            alert_status[cid] = True
-                    else:
-                        if alert_status[cid]:
-                            logging.info(
-                                f"Customer {cid} ({customer_name}) - Balance recovered to {balance:.4f}. Alert disarmed."
-                            )
-                            alert_status[cid] = False
+                            balance_state[cid] = 1
+                            print(f"  !! BALANCE ALERT for {customer_name} (ID: {cid}) — state S{balance_state[cid]}")
+                        elif state == 1 and balance_escalation and balance < balance_rearm and _siren_manager.can_alert(cid, cooldown):
+                            trigger_balance_alert(cid, balance, customer_name or "N/A", settings, escalated=True)
+                            balance_state[cid] = 2
+                            print(f"  !!! BALANCE ESCALATION for {customer_name} (ID: {cid}) — state S{balance_state[cid]}")
+                    elif state > 0 and balance >= balance_threshold:
+                        logging.info(
+                            f"Customer {cid} ({customer_name}) - Balance recovered to {balance:.4f}. Alert disarmed."
+                        )
+                        balance_state[cid] = 0
                 else:
                     error_count += 1
                     last_error = fetch_error
@@ -188,16 +198,21 @@ def _monitor_loop(settings: Settings) -> None:
                     ))
 
                 if margin is not None and billed_min is not None:
+                    state = margin_state.get(cid, 0)
                     if margin < margin_threshold and billed_min > billed_min_threshold:
-                        if not margin_alert_status.get(cid, False) and _siren_manager.can_margin_alert(cid, cooldown):
+                        if state == 0 and _siren_manager.can_margin_alert(cid, cooldown):
                             trigger_margin_alert(cid, margin, billed_min, name, settings)
-                            margin_alert_status[cid] = True
-                    else:
-                        if margin_alert_status.get(cid, False):
-                            logging.info(
-                                f"Customer {cid} ({name}) - Margin recovered to {margin:.1f}%. Alert disarmed."
-                            )
-                            margin_alert_status[cid] = False
+                            margin_state[cid] = 1
+                            print(f"  !! MARGIN ALERT for {name} (ID: {cid}) — state S{margin_state[cid]}")
+                        elif state == 1 and margin_escalation and margin < margin_rearm and _siren_manager.can_margin_alert(cid, cooldown):
+                            trigger_margin_alert(cid, margin, billed_min, name, settings, escalated=True)
+                            margin_state[cid] = 2
+                            print(f"  !!! MARGIN ESCALATION for {name} (ID: {cid}) — state S{margin_state[cid]}")
+                    elif state > 0 and (margin >= margin_threshold or billed_min <= billed_min_threshold):
+                        logging.info(
+                            f"Customer {cid} ({name}) - Margin recovered to {margin:.1f}%. Alert disarmed."
+                        )
+                        margin_state[cid] = 0
 
             write_status(alive=True, last_check=last_check, error_count=error_count, last_error=last_error)
             purge_old_records(settings.db_retention_days)
@@ -231,6 +246,10 @@ def run_monitor(settings: Settings) -> None:
         print(f"  Interval: {interval}s")
     print(f"  Balance alert below {balance_threshold:+.1f}  |  "
           f"Margin alert below {margin_threshold}% & Billed > {billed_min_threshold:.0f} min")
+    if settings.balance_rearm_threshold != settings.balance_threshold:
+        print(f"  Balance escalation at {settings.balance_rearm_threshold:+.1f}")
+    if settings.margin_rearm_threshold != settings.margin_threshold:
+        print(f"  Margin escalation at {settings.margin_rearm_threshold}%")
     print(f"  Summary: {settings.summary_direction} / {settings.summary_interval}")
     print(f"  Cooldown: {settings.alert_cooldown_seconds}s")
     audio = settings.audio_enabled
