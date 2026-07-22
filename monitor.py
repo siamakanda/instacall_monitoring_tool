@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 import time
 import traceback
 from datetime import datetime
@@ -54,7 +55,19 @@ def _is_within_active_hours(
     return True
 
 
-def _monitor_loop(settings: Settings) -> None:
+def _sleep(seconds: float, stop_event: Optional[threading.Event] = None) -> bool:
+    """Sleep for *seconds*, checking stop_event every 1s. Returns True if stop was requested."""
+    remaining = int(seconds)
+    while remaining > 0:
+        if stop_event is not None and stop_event.is_set():
+            return True
+        chunk = min(remaining, 1)
+        time.sleep(chunk)
+        remaining -= chunk
+    return False
+
+
+def _monitor_loop(settings: Settings, stop_event: Optional[threading.Event] = None) -> None:
     customer_ids = settings.customer_ids
     balance_threshold = settings.balance_threshold
     balance_rearm = settings.balance_rearm_threshold
@@ -98,7 +111,8 @@ def _monitor_loop(settings: Settings) -> None:
                 write_status(alive=True, last_check=last_check, error_count=error_count, last_error=last_error)
                 next_time = time.strftime("%H:%M:%S", time.localtime(time.time() + interval))
                 print(f"  [{time.strftime('%H:%M:%S')}] Outside active hours. Next wake at {next_time}")
-                time.sleep(interval)
+                if _sleep(interval, stop_event):
+                    break
                 continue
 
             for cid in customer_ids:
@@ -220,7 +234,8 @@ def _monitor_loop(settings: Settings) -> None:
             print()
             print(f"  [{time.strftime('%H:%M:%S')}] Cycle complete. Next check at {next_time} (~{interval}s)")
             print(f"  {'─' * 40}")
-            time.sleep(interval)
+            if _sleep(interval, stop_event):
+                break
 
     except KeyboardInterrupt:
         print("\n\n[-] Interrupted. Shutting down...")
@@ -228,7 +243,7 @@ def _monitor_loop(settings: Settings) -> None:
         write_status(alive=False)
 
 
-def run_monitor(settings: Settings) -> None:
+def run_monitor(settings: Settings, stop_event: Optional[threading.Event] = None) -> None:
     customer_ids = settings.customer_ids
     balance_threshold = settings.balance_threshold
     margin_threshold = settings.margin_threshold
@@ -265,12 +280,16 @@ def run_monitor(settings: Settings) -> None:
     if settings.health_port > 0:
         start_health_server(settings.health_port)
         print(f"  Health endpoint: http://localhost:{settings.health_port}/health")
+    if settings.webadmin_port > 0:
+        print(f"  Web admin: http://localhost:{settings.webadmin_port}/admin")
     print("  Ctrl+C to stop.")
     print("  " + "-" * 30)
 
     while True:
+        if stop_event is not None and stop_event.is_set():
+            break
         try:
-            _monitor_loop(settings)
+            _monitor_loop(settings, stop_event)
             break
         except KeyboardInterrupt:
             break
@@ -279,4 +298,5 @@ def run_monitor(settings: Settings) -> None:
             print(f"  CRASH: {e}")
             print(f"  Restarting in 10 seconds...")
             write_status(alive=False, last_error=str(e))
-            time.sleep(10)
+            if _sleep(10, stop_event):
+                break

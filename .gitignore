@@ -40,9 +40,9 @@ monitor.status
 .commandcode/
 
 # Database
-marginmonitor.db
-marginmonitor.db-shm
-marginmonitor.db-wal
+instacallmonitor.db
+instacallmonitor.db-shm
+instacallmonitor.db-wal
 
 # Exports
 balance_export_*.csv

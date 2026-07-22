@@ -74,6 +74,7 @@ def menu_settings(settings: Settings) -> Settings:
         ("active_days", "Active days (mon,tue,wed,thu,fri,sat,sun, empty=all)", str),
         ("logging_json", "JSON logging (true/false)", lambda v: v.lower() in ("true", "1", "yes", "on")),
         ("health_port", "Health HTTP port (0=disabled)", int),
+        ("webadmin_port", "Web admin port (0=disabled)", int),
         ("summary_show_all", "Show all summary rows (true/false)", lambda v: v.lower() in ("true", "1", "yes", "on")),
         ("request_timeout", "Request timeout (seconds)", int),
         ("summary_direction", "Summary direction (outbound/inbound)", str),
@@ -326,6 +327,11 @@ def main() -> None:
         print(f"Credential error: {e}")
         input("Press Enter to exit...")
         sys.exit(1)
+
+    if settings.webadmin_port > 0:
+        from webadmin import start_webadmin
+        start_webadmin(settings.webadmin_port)
+        print(f"  Web admin: http://localhost:{settings.webadmin_port}/admin")
 
     while True:
         print()
