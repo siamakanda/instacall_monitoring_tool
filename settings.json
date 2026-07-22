@@ -10,6 +10,7 @@
   "active_days": "",
   "logging_json": false,
   "health_port": 0,
+  "summary_show_all": false,
   "request_timeout": 10,
   "summary_direction": "outbound",
   "summary_interval": "5m",

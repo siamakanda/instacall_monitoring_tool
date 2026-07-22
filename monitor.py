@@ -102,7 +102,7 @@ def _monitor_loop(settings: Settings) -> None:
                 if balance is not None:
                     remaining = credit_limit + balance if credit_limit is not None else None
                     print_balance_line(customer_name, cid, balance, credit_limit, fetch_error,
-                                       prefix=f"[B] [{time.strftime('%H:%M:%S')}]")
+                                       prefix=f"B [{time.strftime('%H:%M:%S')}]")
 
                     prev = last_balance_vals.get(cid)
                     curr = (balance, credit_limit)
@@ -139,18 +139,38 @@ def _monitor_loop(settings: Settings) -> None:
                     last_error = fetch_error
                     logging.warning(f"Customer {cid} - fetch error: {fetch_error}")
                     print_balance_line("N/A", cid, None, None, fetch_error,
-                                       prefix=f"[B] [{time.strftime('%H:%M:%S')}]")
+                                       prefix=f"B [{time.strftime('%H:%M:%S')}]")
 
                 time.sleep(0.5)
 
+            print()
             summary = fetch_summary_report(session, settings)
+            shown = 0
+            total = len(summary)
+            if settings.summary_show_all:
+                show_ids = set(summary.keys())
+            else:
+                show_ids = set(customer_ids) | {
+                    cid for cid, data in summary.items()
+                    if (data.get('margin') is not None and data.get('margin') < margin_threshold
+                        and data.get('billed_min') is not None and data.get('billed_min') > billed_min_threshold)
+                }
+
+            print(f"  ── Summary ({len(show_ids)} shown / {total} total) ──")
             for cid, data in summary.items():
+                if cid not in show_ids:
+                    continue
                 margin = data.get('margin')
                 billed_min = data.get('billed_min')
                 name = str(data.get('name', 'N/A'))
 
+                if (margin is not None and margin == 0 and billed_min is not None and billed_min == 0
+                        and cid not in customer_ids):
+                    continue
+
                 print_summary_line(data, cid, monitored=(cid in customer_ids),
                                    prefix=f"[M] [{time.strftime('%H:%M:%S')}]")
+                shown += 1
 
                 if margin is not None:
                     logging.info(f"Customer {cid} ({name}) - Margin: {margin:.1f}% | Billed Min: {billed_min:.1f}")
@@ -182,7 +202,9 @@ def _monitor_loop(settings: Settings) -> None:
             write_status(alive=True, last_check=last_check, error_count=error_count, last_error=last_error)
             purge_old_records(settings.db_retention_days)
             next_time = time.strftime("%H:%M:%S", time.localtime(time.time() + interval))
+            print()
             print(f"  [{time.strftime('%H:%M:%S')}] Cycle complete. Next check at {next_time} (~{interval}s)")
+            print(f"  {'─' * 40}")
             time.sleep(interval)
 
     except KeyboardInterrupt:

@@ -68,6 +68,7 @@ def menu_settings(settings: Settings) -> Settings:
         ("active_days", "Active days (mon,tue,wed,thu,fri,sat,sun, empty=all)", str),
         ("logging_json", "JSON logging (true/false)", lambda v: v.lower() in ("true", "1", "yes", "on")),
         ("health_port", "Health HTTP port (0=disabled)", int),
+        ("summary_show_all", "Show all summary rows (true/false)", lambda v: v.lower() in ("true", "1", "yes", "on")),
         ("request_timeout", "Request timeout (seconds)", int),
         ("summary_direction", "Summary direction (outbound/inbound)", str),
         ("summary_interval", "Summary interval (5m, 10m, 15m, 1h, etc.)", str),

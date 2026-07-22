@@ -56,6 +56,7 @@ class Settings:
     active_days: str = ""
     logging_json: bool = False
     health_port: int = 0
+    summary_show_all: bool = False
     active_profile: str = "default"
 
     def to_dict(self) -> dict[str, Any]:
