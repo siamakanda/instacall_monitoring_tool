@@ -1,4 +1,4 @@
-# Instacall Monitoring Tool v2.0
+# InstacallMonitor v2.0
 
 Real-time balance and margin monitoring for the Instacall Switch Portal. Alerts via desktop notifications, audible sirens, and webhooks when thresholds are breached.
 
@@ -6,8 +6,8 @@ Real-time balance and margin monitoring for the Instacall Switch Portal. Alerts 
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/siamakanda/instacall_monitoring_tool.git
-cd instacall_monitoring_tool
+git clone https://github.com/siamakanda/InstacallMonitor.git
+cd InstacallMonitor
 
 # 2. Create your credentials file
 cp .env.example .env
@@ -40,15 +40,15 @@ python menu.py
 The repo is self-contained. Just clone, create `.env`, and run:
 
 ```bash
-git clone https://github.com/siamakanda/instacall_monitoring_tool.git
-cd instacall_monitoring_tool
+git clone https://github.com/siamakanda/InstacallMonitor.git
+cd InstacallMonitor
 cp .env.example .env       # then edit with your credentials
 python -m venv venv && source venv/bin/activate   # or: venv\Scripts\activate on Windows
 pip install -r requirements.txt
 python menu.py
 ```
 
-All settings are stored in `settings.json` and `profiles.json`. Copy those files if you want to carry your configuration to a new device. The database (`marginmonitor.db`) and logs stay local.
+All settings are stored in `settings.json` and `profiles.json`. Copy those files if you want to carry your configuration to a new device. The database (`instacallmonitor.db`) and logs stay local.
 
 ## Docker
 
@@ -58,7 +58,7 @@ docker compose up -d
 
 Attach to the interactive menu:
 ```bash
-docker attach marginmonitor
+docker attach instacallmonitor
 ```
 
 ## Features
@@ -84,7 +84,7 @@ docker attach marginmonitor
 ## Usage
 
 ```
-  Instacall Monitoring Tool  v2.0
+  InstacallMonitor  v2.0
   ------------------------------------
   Profile: default
   Monitored: 18
@@ -131,7 +131,7 @@ docker attach marginmonitor
   Webhooks: none
   DB retention: 30 days
   Active hours: 24/7
-  Database: marginmonitor.db
+  Database: instacallmonitor.db
   Ctrl+C to stop.
   ------------------------------
   Running first check now...
@@ -176,7 +176,7 @@ All configurable via menu option 5 or by editing `settings.json`:
 ## Architecture
 
 ```
-instacall_monitoring_tool/
+InstacallMonitor/
   menu.py          — CLI entry point (interactive menu)
   config.py        — Settings dataclass, validation, logging, profiles
   auth.py          — CSRF login, session creation, re-auth helper
@@ -203,7 +203,7 @@ instacall_monitoring_tool/
 |------|---------|
 | `balance_monitor.log` | Rotating log (5 files x 1 MB) |
 | `monitor.status` | JSON health status (alive, last_check, error_count) |
-| `marginmonitor.db` | SQLite database — balance + margin history |
+| `instacallmonitor.db` | SQLite database — balance + margin history |
 
 ## Requirements
 

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 
 from auth import create_session, perform_login
-from config import Settings, write_status
+from config import DB_FILE, Settings, write_status
 from display import print_balance_line, print_summary_line
 from persistence import BalanceRecord, MarginRecord, init_db, insert_balance, insert_margin, purge_old_records
 from scrapers import fetch_balance, fetch_summary_report
@@ -242,7 +242,7 @@ def run_monitor(settings: Settings) -> None:
         print(f"  Active hours: {settings.active_hours_start}-{settings.active_hours_end}{days}")
     else:
         print(f"  Active hours: 24/7")
-    print(f"  Database: marginmonitor.db")
+    print(f"  Database: {DB_FILE}")
     if settings.health_port > 0:
         start_health_server(settings.health_port)
         print(f"  Health endpoint: http://localhost:{settings.health_port}/health")

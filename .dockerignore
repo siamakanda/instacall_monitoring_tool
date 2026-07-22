@@ -8,4 +8,4 @@ __pycache__/
 .git/
 balance_monitor.log*
 monitor.status
-marginmonitor.db
+instacallmonitor.db

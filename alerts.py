@@ -110,7 +110,7 @@ def trigger_balance_alert(
     notification.notify(
         title="BALANCE CRITICAL ALERT",
         message=f"{customer_name} (ID: {customer_id}) balance dropped to {current_balance:.4f}!",
-        app_name="Instacall Monitoring Tool",
+        app_name="InstacallMonitor",
         timeout=10,
     )
     logging.warning(
@@ -141,7 +141,7 @@ def trigger_margin_alert(
     notification.notify(
         title="MARGIN CRITICAL ALERT",
         message=f"{customer_name} (ID: {customer_id}) Margin dropped to {margin:.1f}%! (Billed: {billed_min:.1f} min)",
-        app_name="Instacall Monitoring Tool",
+        app_name="InstacallMonitor",
         timeout=10,
     )
     logging.warning(

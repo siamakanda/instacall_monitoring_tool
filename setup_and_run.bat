@@ -2,7 +2,7 @@
 SETLOCAL EnableDelayedExpansion
 
 echo ============================================================
-echo      Instacall Monitoring Tool - Automated Setup and Run
+echo      InstacallMonitor - Automated Setup and Run
 echo ============================================================
 
 python --version >nul 2>&1

@@ -323,7 +323,7 @@ def main() -> None:
 
     while True:
         print()
-        print("  Instacall Monitoring Tool  v2.0")
+        print("  InstacallMonitor  v2.0")
         print("  " + hr(36))
         show_status(settings)
         print("  " + hr(36))

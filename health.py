@@ -5,9 +5,11 @@ import logging
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
+from config import STATUS_FILE
+
 
 class HealthHandler(BaseHTTPRequestHandler):
-    status_file: str = "monitor.status"
+    status_file: str = STATUS_FILE
 
     def log_message(self, format: str, *args: object) -> None:
         logging.debug(f"Health endpoint - {args[0]}")
@@ -32,8 +34,7 @@ class HealthHandler(BaseHTTPRequestHandler):
         self.wfile.write(body.encode())
 
 
-def start_health_server(port: int, status_file: str = "monitor.status") -> HTTPServer:
-    HealthHandler.status_file = status_file
+def start_health_server(port: int) -> HTTPServer:
     server = HTTPServer(("0.0.0.0", port), HealthHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True, name="health-server")
     thread.start()

@@ -1,7 +1,7 @@
 services:
-  marginmonitor:
+  instacallmonitor:
     build: .
-    container_name: marginmonitor
+    container_name: instacallmonitor
     restart: unless-stopped
     environment:
       - TZ=UTC
@@ -10,7 +10,7 @@ services:
     volumes:
       - ./settings.json:/app/settings.json
       - ./profiles.json:/app/profiles.json
-      - ./marginmonitor.db:/app/marginmonitor.db
+      - ./instacallmonitor.db:/app/instacallmonitor.db
       - ./balance_monitor.log:/app/balance_monitor.log
       - ./monitor.status:/app/monitor.status
     ports:

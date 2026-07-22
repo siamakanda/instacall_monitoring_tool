@@ -24,10 +24,13 @@ HEADERS: dict[str, str] = {
     "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
 }
 
-LOG_FILE = "balance_monitor.log"
-STATUS_FILE = "monitor.status"
-SETTINGS_FILE = "settings.json"
-DB_FILE = "marginmonitor.db"
+_BASE_DIR = Path(__file__).resolve().parent
+
+LOG_FILE = str(_BASE_DIR / "balance_monitor.log")
+STATUS_FILE = str(_BASE_DIR / "monitor.status")
+SETTINGS_FILE = str(_BASE_DIR / "settings.json")
+DB_FILE = str(_BASE_DIR / "instacallmonitor.db")
+PROFILES_FILE = str(_BASE_DIR / "profiles.json")
 
 
 @dataclass
@@ -181,11 +184,11 @@ class JsonLogFormatter(logging.Formatter):
 
 
 def load_profiles() -> dict[str, Settings]:
-    profiles_file = Path("profiles.json")
-    if not profiles_file.exists():
+    if not Path(PROFILES_FILE).exists():
         return {"default": Settings()}
     try:
-        data = json.loads(profiles_file.read_text())
+        with open(PROFILES_FILE, 'r') as f:
+            data = json.load(f)
         return {name: Settings.from_dict(cfg) for name, cfg in data.items()}
     except (json.JSONDecodeError, TypeError):
         return {"default": Settings()}
@@ -193,5 +196,5 @@ def load_profiles() -> dict[str, Settings]:
 
 def save_profiles(profiles: dict[str, Settings]) -> None:
     data = {name: cfg.to_dict() for name, cfg in profiles.items()}
-    with open("profiles.json", 'w') as f:
+    with open(PROFILES_FILE, 'w') as f:
         json.dump(data, f, indent=2)
