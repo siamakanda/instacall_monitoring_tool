@@ -1,25 +1,41 @@
-def fmt_margin(margin):
+from __future__ import annotations
+
+from typing import Optional
+
+
+def fmt_margin(margin: Optional[float]) -> str:
     return f"{margin:.1f}%" if margin is not None else "N/A"
 
 
-def fmt_billed_min(billed_min):
+def fmt_billed_min(billed_min: Optional[float]) -> str:
     return f"{billed_min:.1f}" if billed_min is not None else "N/A"
 
 
-def print_balance_line(customer_name, cid, balance, credit_limit, error, prefix="[B]"):
+def print_balance_line(
+    customer_name: str,
+    cid: str,
+    balance: Optional[float],
+    credit_limit: Optional[float],
+    error: Optional[str] = None,
+    prefix: str = "[B]",
+) -> None:
     if balance is not None:
-        remaining = None
+        remaining: Optional[float] = None
         if credit_limit is not None:
             remaining = credit_limit + balance
-        credit_str = f"/ Credit: {credit_limit:.2f}" if credit_limit is not None else ""
+        credit_str = f" / Credit: {credit_limit:.2f}" if credit_limit is not None else ""
         remaining_str = f" (Remaining: {remaining:.2f})" if remaining is not None else ""
-        print(f"{prefix} {customer_name} (ID: {cid})  Balance {balance:.4f}  {credit_str}{remaining_str}")
+        print(f"{prefix} {customer_name} (ID: {cid})  Balance {balance:.4f}{credit_str}{remaining_str}")
     else:
         print(f"{prefix} ID {cid}  FETCH FAILED ({error})")
 
 
-def print_summary_line(data, cid, monitored=False, prefix="[M]"):
-    """Print a single summary line from a data dict."""
+def print_summary_line(
+    data: dict[str, object],
+    cid: str,
+    monitored: bool = False,
+    prefix: str = "[M]",
+) -> None:
     name = data.get("name", "N/A")
     margin = data.get("margin")
     billed_min = data.get("billed_min")

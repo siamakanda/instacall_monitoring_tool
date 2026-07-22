@@ -1,0 +1,19 @@
+services:
+  marginmonitor:
+    build: .
+    container_name: marginmonitor
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+    env_file:
+      - .env
+    volumes:
+      - ./settings.json:/app/settings.json
+      - ./profiles.json:/app/profiles.json
+      - ./marginmonitor.db:/app/marginmonitor.db
+      - ./balance_monitor.log:/app/balance_monitor.log
+      - ./monitor.status:/app/monitor.status
+    ports:
+      - "8080:8080"
+    stdin_open: true
+    tty: true

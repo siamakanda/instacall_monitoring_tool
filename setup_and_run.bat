@@ -8,24 +8,23 @@ echo ============================================================
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo [!] Error: Python is not installed or not added to your system PATH.
-    echo Please install Python before running this script.
+    echo Please install Python 3.10 or later before running this script.
     pause
     exit /b
 )
 
-if not exist .env.example (
-    echo [+] Creating .env.example file...
-    (
-        echo PORTAL_USERNAME="your_username_here"
-        echo PORTAL_PASSWORD="your_password_here"
-        echo CUSTOMER_IDS="18,22,35"
-    ) > .env.example
-)
-
 if not exist .env (
-    echo [+] Creating production .env file from template...
-    copy .env.example .env >nul
-    echo [!] ACTION REQUIRED: Please open the .env file and add your real credentials.
+    if exist .env.example (
+        echo [+] Creating .env file from .env.example...
+        copy .env.example .env >nul
+        echo [!] ACTION REQUIRED: Edit .env and add your portal credentials.
+        echo     PORTAL_USERNAME="your_username"
+        echo     PORTAL_PASSWORD="your_password"
+    ) else (
+        echo [!] .env.example not found. Create .env with:
+        echo     PORTAL_USERNAME="your_username"
+        echo     PORTAL_PASSWORD="your_password"
+    )
 )
 
 if not exist venv (
@@ -39,15 +38,25 @@ echo [+] Activating virtual environment...
 call venv\Scripts\activate
 
 if exist requirements.txt (
-    echo [+] Installing dependencies from requirements.txt...
+    echo [+] Installing dependencies...
     pip install -r requirements.txt
-) else (
-    echo [!] Warning: requirements.txt not found. Skipping dependency install.
 )
 
 echo ============================================================
-echo [+] Setup complete. Launching Instacall Monitoring Tool...
+echo [+] Setup complete. Launching Monitoring Tool...
 echo ============================================================
+echo.
+echo   Menu options:
+echo     0 - Quick Check Parallel (Async)
+echo     1 - Start Monitor
+echo     2 - Quick Balances
+echo     3 - Quick Summary
+echo     5 - Settings
+echo     6 - Profiles
+echo     7 - History
+echo     8 - Export
+echo     9 - Exit
+echo.
 python menu.py
 
 pause

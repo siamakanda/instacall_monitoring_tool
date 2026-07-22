@@ -1,19 +1,35 @@
+from __future__ import annotations
+
 import time
 import logging
+from typing import Callable, TypeVar
+
+T = TypeVar("T")
 
 
-def _is_transient(error):
+def _is_transient(error: str | None) -> bool:
     if not error:
         return False
     e = str(error).lower()
     return "timeout" in e or "connection" in e
 
 
-def retry_with_backoff(fn, error_extractor, *args, **kwargs):
-    """Call fn, retry up to 2 times with escalating delay on transient failure.
-    fn must accept (*args, **kwargs).
-    error_extractor(fn_result) must return error string or None.
-    Retries at 2s then 5s."""
+def retry_with_backoff(
+    fn: Callable[..., T],
+    error_extractor: Callable[[T], str | None],
+    *args: object,
+    **kwargs: object,
+) -> T:
+    """Call fn, retry up to 2 times with escalating delay (2s, 5s) on transient failure.
+
+    Args:
+        fn: The function to call with retry logic.
+        error_extractor: Takes fn's return value and returns an error string or None.
+        *args, **kwargs: Passed through to fn.
+
+    Returns:
+        The result from fn (may be the errored result if all retries exhausted).
+    """
     delays = [2, 5]
     result = fn(*args, **kwargs)
     error = error_extractor(result)

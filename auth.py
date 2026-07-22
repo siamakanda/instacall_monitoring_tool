@@ -1,10 +1,17 @@
-import requests
+from __future__ import annotations
+
 import logging
+from typing import Callable, Optional, TypeVar
+
+import requests
 from bs4 import BeautifulSoup
-from config import get_credentials, HEADERS, LOGIN_URL
+
+from config import HEADERS, LOGIN_URL, Settings, get_credentials
+
+T = TypeVar("T")
 
 
-def perform_login(session, timeout=10):
+def perform_login(session: requests.Session, timeout: int = 10) -> bool:
     username, password = get_credentials()
     try:
         login_init = session.get(LOGIN_URL, timeout=timeout)
@@ -26,7 +33,37 @@ def perform_login(session, timeout=10):
         return False
 
 
-def create_session():
+def create_session() -> requests.Session:
     session = requests.Session()
     session.headers.update(HEADERS)
     return session
+
+
+def ensure_authenticated(
+    session: requests.Session,
+    response: requests.Response,
+    timeout: int = 10,
+) -> bool:
+    """Check if response points to login page; if so, re-authenticate. Returns True if still valid."""
+    if "login" not in response.url.lower():
+        return True
+    logging.warning("Session expired. Re-logging in...")
+    return perform_login(session, timeout)
+
+
+def with_session_refresh(
+    session: requests.Session,
+    timeout: int,
+    fn: Callable[[], requests.Response],
+    max_attempts: int = 2,
+) -> requests.Response:
+    """Call fn(); if redirected to login, refresh session and retry once."""
+    for attempt in range(max_attempts):
+        resp = fn()
+        if "login" not in resp.url.lower():
+            return resp
+        if attempt < max_attempts - 1:
+            logging.warning(f"Session expired (attempt {attempt + 1}). Re-logging in...")
+            if not perform_login(session, timeout):
+                raise RuntimeError("Re-login failed")
+    return resp
