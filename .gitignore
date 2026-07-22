@@ -33,3 +33,5 @@ Desktop.ini
 *.sln
 *.swp
 balance_monitor.log
+balance_monitor.log.*
+monitor.status

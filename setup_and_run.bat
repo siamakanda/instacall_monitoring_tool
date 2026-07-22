@@ -2,7 +2,7 @@
 SETLOCAL EnableDelayedExpansion
 
 echo ============================================================
-echo      Instacall Balance Monitor - Automated Setup and Run
+echo      Instacall Monitoring Tool - Automated Setup and Run
 echo ============================================================
 
 python --version >nul 2>&1
@@ -46,8 +46,8 @@ if exist requirements.txt (
 )
 
 echo ============================================================
-echo [+] Setup complete. Launching balance monitor loop...
+echo [+] Setup complete. Launching Instacall Monitoring Tool...
 echo ============================================================
-python balance_alert.py
+python menu.py
 
 pause

@@ -1,20 +1,19 @@
 import sys
-from balance_alert import (
-    load_settings,
-    save_settings,
-    run_monitor,
-    run_quick_check_balance,
-    run_quick_check_summary,
-    run_quick_check_full,
-    DEFAULT_SETTINGS,
-)
+from config import load_settings, save_settings, setup_logging, validate_settings, get_credentials
+from monitor import run_monitor
+from quick import run_quick_check_balance, run_quick_check_summary, run_quick_check_full
 
 
-def print_header():
-    print()
-    print("=" * 50)
-    print("  Instacall Balance & Margin Monitor")
-    print("=" * 50)
+def fmt_ids(ids):
+    return ", ".join(ids) if ids else "none"
+
+
+def fmt_pct(val):
+    return f"{val:.0f}%" if val == int(val) else f"{val:.1f}%"
+
+
+def hr(n=40):
+    return "-" * n
 
 
 def show_status(settings):
@@ -25,11 +24,13 @@ def show_status(settings):
     billed = settings["billed_min_threshold"]
     direction = settings.get("summary_direction", "outbound")
     sint = settings.get("summary_interval", "5m")
-    print(f"  IDs: {ids}")
-    print(f"  Interval: {interval // 60} min   |   Balance Alert: < {bal}")
-    print(f"  Margin Alert: < {margin}%   |   Billed Min > {billed}")
+
+    print(f"  Monitored: {fmt_ids(ids)}")
+    print(f"  Interval: {interval // 60} min  |  Balance alert below {bal:+.1f}")
+    print(f"  Margin alert below {fmt_pct(margin)}  |  Billed min above {billed:.0f}")
     print(f"  Summary: {direction} / {sint}")
-    print("-" * 50)
+    audio = settings.get("audio_enabled", True)
+    print(f"  Audio: {'ON' if audio else 'OFF'}")
 
 
 def menu_settings(settings):
@@ -42,6 +43,7 @@ def menu_settings(settings):
         ("request_timeout", "Request timeout (seconds)", int),
         ("summary_direction", "Summary direction (outbound/inbound)", str),
         ("summary_interval", "Summary interval (5m, 10m, 15m, 1h, etc.)", str),
+        ("audio_enabled", "Audio alerts (true/false)", lambda v: v.lower() in ("true", "1", "yes", "on")),
         ("siren_loops", "Siren loops", int),
         ("siren_min_freq", "Siren min frequency (Hz)", int),
         ("siren_max_freq", "Siren max frequency (Hz)", int),
@@ -50,18 +52,18 @@ def menu_settings(settings):
     ]
 
     while True:
-        print_header()
+        print()
         print("  Settings")
-        print("-" * 50)
+        print("  " + hr(40))
         for i, (key, label, _) in enumerate(fields, 1):
             val = settings[key]
             if isinstance(val, list):
                 val = ", ".join(val)
             print(f"  {i:2}. {label}: {val}")
-        print("   0. Back to main menu")
+        print("   0. Back")
         print()
 
-        choice = input("  Change setting #: ").strip()
+        choice = input("  Change #: ").strip()
         if choice == "0":
             break
 
@@ -77,33 +79,52 @@ def menu_settings(settings):
             if isinstance(current, list):
                 current = ", ".join(current)
 
-            new_val = input(f"  New value for '{label}' [{current}]: ").strip()
+            new_val = input(f"  {label} [{current}]: ").strip()
             if new_val == "":
                 continue
 
             settings[key] = convert(new_val)
             save_settings(settings)
-            print(f"  Saved.")
+            print("  Saved.")
         except (ValueError, TypeError) as e:
             print(f"  Error: {e}")
         input("  Press Enter...")
 
 
 def main():
+    setup_logging()
     settings = load_settings()
 
+    errors = validate_settings(settings)
+    if errors:
+        print("Invalid settings:")
+        for e in errors:
+            print(f"  - {e}")
+        input("Press Enter to exit...")
+        sys.exit(1)
+
+    try:
+        get_credentials()
+    except ValueError as e:
+        print(f"Credential error: {e}")
+        input("Press Enter to exit...")
+        sys.exit(1)
+
     while True:
-        print_header()
+        print()
+        print("  Instacall Monitoring Tool")
+        print("  " + hr(36))
         show_status(settings)
-        print("  1. Start Continuous Monitor")
-        print("  2. Quick Check - Balance")
-        print("  3. Quick Check - Summary Report")
-        print("  4. Quick Check - Full (Balance + Summary)")
+        print("  " + hr(36))
+        print("  1. Start Monitor")
+        print("  2. Quick Check - Balances")
+        print("  3. Quick Check - Summary")
+        print("  4. Quick Check - Full")
         print("  5. Settings")
         print("  6. Exit")
         print()
 
-        choice = input("  Choice: ").strip()
+        choice = input("  > ").strip()
 
         if choice == "1":
             run_monitor(settings)
@@ -117,11 +138,10 @@ def main():
             menu_settings(settings)
             settings = load_settings()
         elif choice == "6":
-            print("  Goodbye.")
+            print("  Exit.")
             sys.exit(0)
         else:
-            print("  Invalid choice. Press Enter...")
-            input()
+            print("  Invalid choice.")
 
 
 if __name__ == "__main__":
