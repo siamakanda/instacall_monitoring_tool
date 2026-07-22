@@ -35,3 +35,4 @@ Desktop.ini
 balance_monitor.log
 balance_monitor.log.*
 monitor.status
+.commandcode/
