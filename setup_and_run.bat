@@ -39,7 +39,7 @@ call venv\Scripts\activate
 
 if exist requirements.txt (
     echo [+] Installing dependencies...
-    pip install -r requirements.txt
+    venv\Scripts\python.exe -m pip install -r requirements.txt
 )
 
 echo ============================================================
@@ -57,6 +57,6 @@ echo     7 - History
 echo     8 - Export
 echo     9 - Exit
 echo.
-python menu.py
+venv\Scripts\python.exe menu.py
 
 pause

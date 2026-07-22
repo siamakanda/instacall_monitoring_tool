@@ -1,4 +1,3 @@
 @echo off
-call venv\Scripts\activate
-python menu.py
+venv\Scripts\python.exe menu.py
 pause
