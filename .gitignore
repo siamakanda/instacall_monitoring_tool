@@ -39,10 +39,13 @@ balance_monitor.log.*
 monitor.status
 .commandcode/
 
-# Database
+# Database (current and legacy)
 instacallmonitor.db
 instacallmonitor.db-shm
 instacallmonitor.db-wal
+marginmonitor.db
+marginmonitor.db-shm
+marginmonitor.db-wal
 
 # Exports
 balance_export_*.csv
