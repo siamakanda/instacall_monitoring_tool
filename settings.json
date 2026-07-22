@@ -1,0 +1,15 @@
+{
+  "customer_ids": ["18", "22", "35"],
+  "check_interval_seconds": 600,
+  "balance_threshold": -365.0,
+  "margin_threshold": 30.0,
+  "billed_min_threshold": 70.0,
+  "request_timeout": 10,
+  "summary_direction": "outbound",
+  "summary_interval": "5m",
+  "siren_loops": 15,
+  "siren_min_freq": 1500,
+  "siren_max_freq": 2600,
+  "siren_step_freq": 100,
+  "siren_tone_duration": 20
+}
