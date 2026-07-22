@@ -32,7 +32,21 @@ Desktop.ini
 *.njsproj
 *.sln
 *.swp
+
+# Application Runtime Files
 balance_monitor.log
 balance_monitor.log.*
 monitor.status
 .commandcode/
+
+# Database
+marginmonitor.db
+marginmonitor.db-shm
+marginmonitor.db-wal
+
+# Exports
+balance_export_*.csv
+margin_export_*.csv
+
+# Docker
+docker-compose.override.yml
